@@ -5,11 +5,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 
 @Entity
 @Table(name = "Payment")
@@ -19,21 +14,11 @@ public class PaymentEntity
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int payment_Id;
-	
-	
-	@NotNull(message = "Field cannot be null")
-	@NotBlank(message = "Field cannot be blank")
+
 	private String Payment_Type;
 	
-	
-	@Positive
-	@Min(value = 799)
-	@Max(value = 3999)
 	private double Paid_Amount;
 	
-	
-	@NotNull(message = "Field cannot be null")
-	@NotBlank(message = "Field cannot be blank")
 	private String Payment_Status;
 
 
