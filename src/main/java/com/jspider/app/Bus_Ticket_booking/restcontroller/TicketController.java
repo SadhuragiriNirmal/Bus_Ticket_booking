@@ -29,7 +29,7 @@ public class TicketController {
 	
 	//save Ticket
 		@PostMapping
-		public ResponseEntity<ResponseStructure<List<TicketDto>>> saveTicket(@RequestBody List<Ticket> t, int userid){
+		public ResponseEntity<ResponseStructure<TicketDto>> saveTicket(@RequestBody Ticket t, int userid){
 			
 			return ticketService.saveTicket(t,userid);
 		}

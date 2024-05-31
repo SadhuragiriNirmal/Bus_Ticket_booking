@@ -4,22 +4,18 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-
 import jakarta.persistence.OneToOne;
 import lombok.Data;
 
 @Component
 @Data
-public class PassengerDto {
+public class PaymentDto 
+{
 
-	private String pname;
-	private String pemail;
-	private long pmobileno;
-	private int pAge;
-	private String pAgeCategory;
-	private String paddress;
+	private String paymentType;
+	private double paidAmount;
+	private String paymentStatus;
 	@JsonIgnore
-    @OneToOne
+	@OneToOne
 	private TicketDto ticket;
-	 
 }

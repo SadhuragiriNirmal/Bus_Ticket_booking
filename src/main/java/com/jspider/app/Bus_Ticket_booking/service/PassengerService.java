@@ -37,8 +37,8 @@ public class PassengerService {
 			dto.setPname(existPassenger.getPname());
 			dto.setPemail(existPassenger.getPemail());
 			dto.setPmobileno(existPassenger.getPmobileno());
-			dto.setpAge(existPassenger.getpAge());
-			dto.setpAgeCategory(existPassenger.getpAgeCategory());
+			dto.setPAge(existPassenger.getPAge());
+			dto.setPAgeCategory(existPassenger.getPAgeCategory());
 			dto.setPaddress(existPassenger.getPaddress());
 			structure.setMessage("Passenger saved successfully");
 			structure.setStatus(HttpStatus.CREATED.value());
@@ -60,8 +60,8 @@ public class PassengerService {
 			dto.setPname(existPassenger.getPname());
 			dto.setPemail(existPassenger.getPemail());
 			dto.setPmobileno(existPassenger.getPmobileno());
-			dto.setpAge(existPassenger.getpAge());
-			dto.setpAgeCategory(existPassenger.getpAgeCategory());
+			dto.setPAge(existPassenger.getPAge());
+			dto.setPAgeCategory(existPassenger.getPAgeCategory());
 			dto.setPaddress(existPassenger.getPaddress());
 			structure.setMessage("Passenger got successfully");
 			structure.setStatus(HttpStatus.FOUND.value());
@@ -84,8 +84,8 @@ public class PassengerService {
 			dto.setPname(existPassenger.getPname());
 			dto.setPemail(existPassenger.getPemail());
 			dto.setPmobileno(existPassenger.getPmobileno());
-			dto.setpAge(existPassenger.getpAge());
-			dto.setpAgeCategory(existPassenger.getpAgeCategory());
+			dto.setPAge(existPassenger.getPAge());
+			dto.setPAgeCategory(existPassenger.getPAgeCategory());
 			dto.setPaddress(existPassenger.getPaddress());
 			structure.setMessage("Passenger updated successfully");
 			structure.setStatus(HttpStatus.OK.value());
@@ -108,8 +108,8 @@ public class PassengerService {
 			dto.setPname(existPassenger.getPname());
 			dto.setPemail(existPassenger.getPemail());
 			dto.setPmobileno(existPassenger.getPmobileno());
-			dto.setpAge(existPassenger.getpAge());
-			dto.setpAgeCategory(existPassenger.getpAgeCategory());
+			dto.setPAge(existPassenger.getPAge());
+			dto.setPAgeCategory(existPassenger.getPAgeCategory());
 			dto.setPaddress(existPassenger.getPaddress());
 			structure.setMessage("Passenger deleted successfully");
 			structure.setStatus(HttpStatus.OK.value());
@@ -134,8 +134,8 @@ public class PassengerService {
 				dto.setPname(p.getPname());
 				dto.setPemail(p.getPemail());
 				dto.setPmobileno(p.getPmobileno());
-				dto.setpAge(p.getpAge());
-				dto.setpAgeCategory(p.getpAgeCategory());
+				dto.setPAge(p.getPAge());
+				dto.setPAgeCategory(p.getPAgeCategory());
 				dto.setPaddress(p.getPaddress());
 				Passengers.add(dto);
 			}

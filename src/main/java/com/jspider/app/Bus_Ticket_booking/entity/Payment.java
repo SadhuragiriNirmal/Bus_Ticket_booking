@@ -5,26 +5,27 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
-@Table(name = "ticket")
+@Table(name = "Payment")
 @Data
-public class Ticket {
+public class Payment
+{
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int ticketid;
-	private String ticketNumber; 
-	private String ticketCategory;
+	private int paymentId;
+
+	private String paymentType;
+	
+	private double paidAmount;
+	
+	private String paymentStatus;
+	
 	@OneToOne(cascade = CascadeType.ALL)
-	private Passenger passenger;
-	@ManyToOne
-	private User user;
-	@OneToOne(cascade = CascadeType.REMOVE)
-	private Payment payment;
+	private Ticket ticket;
 	
 }

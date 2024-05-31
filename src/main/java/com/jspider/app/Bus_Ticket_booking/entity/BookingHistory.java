@@ -1,30 +1,30 @@
 package com.jspider.app.Bus_Ticket_booking.entity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
-@Table(name = "ticket")
+@Table(name = "BookingHistory")
 @Data
-public class Ticket {
-	
+public class BookingHistory 
+{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int ticketid;
-	private String ticketNumber; 
-	private String ticketCategory;
-	@OneToOne(cascade = CascadeType.ALL)
-	private Passenger passenger;
+	private int bhid;
+
+    private String bookedDate;
+
+	private String journeyDate;
+	
+	private int  seatAvilable;
+	
 	@ManyToOne
 	private User user;
-	@OneToOne(cascade = CascadeType.REMOVE)
-	private Payment payment;
 	
 }
+

@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 
 import com.jspider.app.Bus_Ticket_booking.dao.TicketDao;
 import com.jspider.app.Bus_Ticket_booking.dto.PassengerDto;
+import com.jspider.app.Bus_Ticket_booking.dto.PaymentDto;
 import com.jspider.app.Bus_Ticket_booking.dto.TicketDto;
 import com.jspider.app.Bus_Ticket_booking.dto.UserDto;
+import com.jspider.app.Bus_Ticket_booking.entity.BookingHistory;
 import com.jspider.app.Bus_Ticket_booking.entity.Ticket;
 import com.jspider.app.Bus_Ticket_booking.util.ResponseStructure;
 
@@ -26,50 +28,51 @@ public class TicketService {
 	TicketDto dto;
 	
 	@Autowired
+	PaymentDto pyDto;
+	
+	@Autowired
 	PassengerService pservice;
 	
 	@Autowired
 	UserService uservice;
 	
+	@Autowired
+	BookingHistoryService bhservice;
+
+	
 	    //save Ticket
 	
-		public ResponseEntity<ResponseStructure<List<TicketDto>>> saveTicket(List<Ticket> tickets, int userid) {
+		public ResponseEntity<ResponseStructure<TicketDto>> saveTicket(Ticket ticket, int userid) {
 			
-		    ResponseStructure<List<TicketDto>> structure = new ResponseStructure<>();
-		    List<TicketDto> ticketsDto = new ArrayList<TicketDto>();
+		    ResponseStructure<TicketDto> structure = new ResponseStructure<>();
 		    
-		    if(tickets != null) {
+		    if(ticket != null) {
 		    	
-		    	for(Ticket t:tickets) {
-		    		
-		    		    t.setUser(uservice.dao.findByUserId(userid));//set user to ticket
-		    		    Ticket existTicket =  dao.saveTicket(t);
-		    		   	pservice.assignTicketToPassenger(t);//ticket assigning invoke for passenger
+		    	ticket.setUser(uservice.dao.findByUserId(userid));//set user to ticket
+		        Ticket existTicket = dao.saveTicket(ticket);
+		        BookingHistory bookingHistory = new BookingHistory();
+		        bookingHistory.setUser(uservice.dao.findByUserId(userid));
+		        bhservice.saveBookingHistory(bookingHistory);;
+		        pservice.assignTicketToPassenger(ticket);//ticket assigning invoke for passenger
 		    		    
-						if(existTicket != null) {
+				if(existTicket != null) {
+					
+					UserDto udto = uservice.findByUserId(userid).getBody().getData();
+					PassengerDto pdto = pservice.findByPassengerId(existTicket.getPassenger().getPassengerid()).getBody().getData();
+					dto.setTicketNumber(existTicket.getTicketNumber());
+					dto.setTicketCategory(existTicket.getTicketCategory());
+					dto.setPassenger(pdto);
+					dto.setUser(udto);
+					dto.setPayment(pyDto);
 							
-							UserDto udto = uservice.findByUserId(userid).getBody().getData();
-			    		    PassengerDto pdto = pservice.findByPassengerId(existTicket.getPassenger().getPassengerid()).getBody().getData();
-					        dto.setFrom(existTicket.getFrom());
-					        dto.setTo(existTicket.getTo());
-					        dto.setVia(existTicket.getVia());
-					        dto.setBusno(existTicket.getBusno());
-					        dto.setSeatno(existTicket.getSeatno());
-					        dto.setAgeCategory(existTicket.getAgeCategory());
-					        dto.setPrice(existTicket.getPrice());
-					        dto.setUser(udto);
-					        dto.setPassenger(pdto);
-							ticketsDto.add(dto);
-							
-						}
-						else return null;
+				}
+				else return null;
 		    		
-		    	}
-		    	uservice.assignTicketToUser(tickets,userid);//ticket assigining invoke for user
+		    	uservice.assignTicketToUser(ticket,userid);//ticket assigining invoke for user
 		    	structure.setMessage("Tickets saved successfully");
 				structure.setStatus(HttpStatus.CREATED.value());
-				structure.setData(ticketsDto);	
-				return new ResponseEntity<ResponseStructure<List<TicketDto>>>(structure,HttpStatus.CREATED);	
+				structure.setData(dto);	
+				return new ResponseEntity<ResponseStructure<TicketDto>>(structure,HttpStatus.CREATED);	
 		    	
 		    	
 		    }else return null;
@@ -84,13 +87,13 @@ public class TicketService {
 			Ticket existTicket = dao.findByTicketId(ticketid);
 			if(existTicket != null) {
 				
-				dto.setFrom(existTicket.getFrom());
-			    dto.setTo(existTicket.getTo());
-			    dto.setVia(existTicket.getVia());
-			    dto.setBusno(existTicket.getBusno());
-			    dto.setSeatno(existTicket.getSeatno());
-			    dto.setAgeCategory(existTicket.getAgeCategory());
-			    dto.setPrice(existTicket.getPrice());
+				UserDto udto = uservice.findByUserId(existTicket.getUser().getUserid()).getBody().getData();
+    		    PassengerDto pdto = pservice.findByPassengerId(existTicket.getPassenger().getPassengerid()).getBody().getData();
+				dto.setTicketNumber(existTicket.getTicketNumber());
+		        dto.setTicketCategory(existTicket.getTicketCategory());
+		        dto.setPassenger(pdto);
+		        dto.setUser(udto);
+		        dto.setPayment(pyDto);
 				structure.setMessage("Ticket got successfully");
 				structure.setStatus(HttpStatus.FOUND.value());
 				structure.setData(dto);
@@ -109,13 +112,13 @@ public class TicketService {
 			Ticket existTicket = dao.updateTicket(t, ticketid);
 			if(existTicket != null) {
 
-				dto.setFrom(existTicket.getFrom());
-			    dto.setTo(existTicket.getTo());
-			    dto.setVia(existTicket.getVia());
-			    dto.setBusno(existTicket.getBusno());
-			    dto.setSeatno(existTicket.getSeatno());
-			    dto.setAgeCategory(existTicket.getAgeCategory());
-			    dto.setPrice(existTicket.getPrice());
+				UserDto udto = uservice.findByUserId(existTicket.getUser().getUserid()).getBody().getData();
+    		    PassengerDto pdto = pservice.findByPassengerId(existTicket.getPassenger().getPassengerid()).getBody().getData();
+				dto.setTicketNumber(existTicket.getTicketNumber());
+		        dto.setTicketCategory(existTicket.getTicketCategory());
+		        dto.setPassenger(pdto);
+		        dto.setUser(udto);
+		        dto.setPayment(pyDto);
 				structure.setMessage("Ticket updated successfully");
 				structure.setStatus(HttpStatus.OK.value());
 				structure.setData(dto);
@@ -142,16 +145,16 @@ public class TicketService {
 				}
 				
 				
-				Ticket deletedTicket = dao.deleteTicket(ticketid);
-				if(deletedTicket != null) {
+				Ticket existTicket = dao.deleteTicket(ticketid);
+				if(existTicket != null) {
 					
-					dto.setFrom(deletedTicket.getFrom());
-				    dto.setTo(deletedTicket.getTo());
-				    dto.setVia(deletedTicket.getVia());
-				    dto.setBusno(deletedTicket.getBusno());
-				    dto.setSeatno(deletedTicket.getSeatno());
-				    dto.setAgeCategory(deletedTicket.getAgeCategory());
-				    dto.setPrice(deletedTicket.getPrice());
+					UserDto udto = uservice.findByUserId(existTicket.getUser().getUserid()).getBody().getData();
+	    		    PassengerDto pdto = pservice.findByPassengerId(existTicket.getPassenger().getPassengerid()).getBody().getData();
+					dto.setTicketNumber(existTicket.getTicketNumber());
+			        dto.setTicketCategory(existTicket.getTicketCategory());
+			        dto.setPassenger(pdto);
+			        dto.setUser(udto);
+			        dto.setPayment(pyDto);
 					structure.setMessage("Ticket deleted successfully");
 					structure.setStatus(HttpStatus.OK.value());
 					structure.setData(dto);
@@ -177,14 +180,15 @@ public class TicketService {
 			if(existTickets != null) {
 				
 				for(Ticket t: existTickets) {
+					
 					TicketDto ticktesDto = new TicketDto();
-					ticktesDto.setFrom(t.getFrom());
-				    ticktesDto.setTo(t.getTo());
-				    ticktesDto.setVia(t.getVia());
-				    ticktesDto.setBusno(t.getBusno());
-				    ticktesDto.setSeatno(t.getSeatno());
-				    ticktesDto.setAgeCategory(t.getAgeCategory());
-				    ticktesDto.setPrice(t.getPrice());
+					UserDto udto = uservice.findByUserId(t.getUser().getUserid()).getBody().getData();
+	    		    PassengerDto pdto = pservice.findByPassengerId(t.getPassenger().getPassengerid()).getBody().getData();
+					dto.setTicketNumber(t.getTicketNumber());
+			        dto.setTicketCategory(t.getTicketCategory());
+			        dto.setPassenger(pdto);
+			        dto.setUser(udto);
+			        dto.setPayment(pyDto);
 					tickets.add(ticktesDto);
 				}
 				

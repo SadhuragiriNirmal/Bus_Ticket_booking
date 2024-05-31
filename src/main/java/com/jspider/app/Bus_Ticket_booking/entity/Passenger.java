@@ -9,9 +9,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.Data;
 
 @Entity
 @Table(name = "passenger")
+@Data
 public class Passenger {
 	
 	@Id
@@ -25,54 +27,5 @@ public class Passenger {
 	private String paddress;
 	@OneToOne(cascade = CascadeType.ALL)
 	private Ticket ticket;
-	
-	public int getPassengerid() {
-		return passengerid;
-	}
-	public void setPassengerid(int passengerid) {
-		this.passengerid = passengerid;
-	}
-	public String getPname() {
-		return pname;
-	}
-	public void setPname(String pname) {
-		this.pname = pname;
-	}
-	public String getPemail() {
-		return pemail;
-	}
-	public void setPemail(String pemail) {
-		this.pemail = pemail;
-	}
-	public long getPmobileno() {
-		return pmobileno;
-	}
-	public void setPmobileno(long pmobileno) {
-		this.pmobileno = pmobileno;
-	}
-	public int getpAge() {
-		return pAge;
-	}
-	public void setpAge(int pAge) {
-		this.pAge = pAge;
-	}
-	public String getpAgeCategory() {
-		return pAgeCategory;
-	}
-	public void setpAgeCategory(String pAgeCategory) {
-		this.pAgeCategory = pAgeCategory;
-	}
-	public String getPaddress() {
-		return paddress;
-	}
-	public void setPaddress(String paddress) {
-		this.paddress = paddress;
-	}
-	public Ticket getTicket() {
-		return ticket;
-	}
-	public void setTicket(Ticket ticket) {
-		this.ticket = ticket;
-	}	
 	
 }

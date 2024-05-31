@@ -1,5 +1,6 @@
 package com.jspider.app.Bus_Ticket_booking.service;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,9 +9,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.jspider.app.Bus_Ticket_booking.dao.BookingHistoryDao;
 import com.jspider.app.Bus_Ticket_booking.dao.TicketDao;
 import com.jspider.app.Bus_Ticket_booking.dao.UserDao;
+import com.jspider.app.Bus_Ticket_booking.dto.BookingHistoryDto;
+import com.jspider.app.Bus_Ticket_booking.dto.PassengerDto;
+import com.jspider.app.Bus_Ticket_booking.dto.PaymentDto;
+import com.jspider.app.Bus_Ticket_booking.dto.TicketDto;
 import com.jspider.app.Bus_Ticket_booking.dto.UserDto;
+import com.jspider.app.Bus_Ticket_booking.entity.BookingHistory;
+import com.jspider.app.Bus_Ticket_booking.entity.Passenger;
+import com.jspider.app.Bus_Ticket_booking.entity.Payment;
 import com.jspider.app.Bus_Ticket_booking.entity.Ticket;
 import com.jspider.app.Bus_Ticket_booking.entity.User;
 import com.jspider.app.Bus_Ticket_booking.util.ResponseStructure;
@@ -28,6 +37,22 @@ public class UserService {
 	
 	@Autowired
 	TicketDao tdao;
+	
+	@Autowired
+	BookingHistoryDao bhdao;
+	
+	@Autowired
+	TicketDto tdto;
+	
+	@Autowired
+	PaymentDto paydto;
+	
+	@Autowired
+	PassengerDto pdto;
+	
+	@Autowired
+	BookingHistoryDto bhdto;
+
 	
 	//save user
 	
@@ -55,11 +80,24 @@ public class UserService {
 		
 		ResponseStructure<UserDto> structure = new ResponseStructure<UserDto>();
 		User existUser = dao.findByUserId(userid);
+		
 		if(existUser != null) {
 			
+			List<Ticket> tickets = existUser.getTickets();
+			List<TicketDto> ticketsDto = new ArrayList<TicketDto>();
 			dto.setUname(existUser.getUname());
 			dto.setUemail(existUser.getUemail());
 			dto.setMembership_type(existUser.getMembership_type());
+			for(Ticket t:tickets) {
+				
+				tdto.setTicketNumber(t.getTicketNumber());
+				tdto.setTicketCategory(t.getTicketCategory());
+				tdto.setPassenger(converToPassengerDto(t.getPassenger()));
+				tdto.setPayment(convertToPaymentDto(t.getPayment()));
+				ticketsDto.add(tdto);
+			}
+			dto.setTicktes(ticketsDto);
+			dto.setBookingHistories(convertToBookinghistorylist(existUser.getBookingHistories()));	
 			structure.setMessage("user got successfully");
 			structure.setStatus(HttpStatus.FOUND.value());
 			structure.setData(dto);
@@ -75,7 +113,9 @@ public class UserService {
 	public ResponseEntity<ResponseStructure<UserDto>> updateUser(User u, int userid) {
 		
 		ResponseStructure<UserDto> structure = new ResponseStructure<UserDto>();
-		User existUser = dao.updateUser(u, userid);
+		//assigne ticket to user if ticket presented
+		User user =assignTicketToUserIfPresented(u, userid);
+		User existUser = dao.updateUser(user, userid);
 		if(existUser != null) {
 			
 			dto.setUname(existUser.getUname());
@@ -99,11 +139,11 @@ public class UserService {
 		User user = dao.findByUserId(userid);
 		if(user != null) {
 			
-			//brake relation between user and tickets if tickets is presented.
-			if(user.getTickets() != null) {
-				
-				 brakeRelation(user);
-			}
+			//brake relation between user and Ticket , And DELETE if tickets is presented.
+			if(user.getTickets() != null) brakeRelationTicket(user);
+			
+			//brake relation between user and Booking histroy, And DELETE if booking history is presented.
+			if(user.getBookingHistories() != null) brakeRelationBookingHistory(user);
 			
 			User existUser = dao.deleteUser(userid);
 			if(existUser != null) {
@@ -153,17 +193,16 @@ public class UserService {
 	
 	//assign ticket to user
 	
-	public UserDto assignTicketToUser(List<Ticket> ticktes, int userid) {
+	public UserDto assignTicketToUser(Ticket ticket, int userid) {
 		
-		if(ticktes!=null) {
+		if(ticket!=null) {
 			 
 			User u = dao.findByUserId(userid);
-			
 			
 			if(u!=null) {
 				
 				List<Ticket> exTickets = u.getTickets();
-				exTickets.addAll(ticktes);
+				exTickets.add(ticket);
 				u.setTickets(exTickets);
 				User exUser =  dao.saveUser(u);
 				
@@ -207,9 +246,9 @@ public class UserService {
 		
 	}
 	
-	//brake the relation between user and tickets
+	//brake the relation between user and tickets and delete the ticket
 	
-	public User brakeRelation(User user) {
+	public User brakeRelationTicket(User user) {
 		
 		if(user != null) {
 			
@@ -230,6 +269,102 @@ public class UserService {
 		}
 		else return null;
 
+	}
+	
+	//brake the relation between user, booking history and delete the booking histroty
+	
+	public User brakeRelationBookingHistory(User user) {
+		
+		if(user != null) {
+			
+			List<BookingHistory> bookingHistories = user.getBookingHistories();
+			user.setBookingHistories(null);;
+			dao.updateUser(user,user.getUserid());
+			
+			for(BookingHistory bh: bookingHistories) {
+				
+				bh.setUser(null);;
+				bhdao.updateBookingHistory(bh, bh.getBhid());
+				bhdao.deleteBookingHistory(bh.getBhid());
+				
+			}
+			
+			return user;
+			
+		}
+		else return null;
+
+	}
+	
+	//assigne ticket to user if tickes are present
+	
+	public User assignTicketToUserIfPresented(User u,int userid) {
+		
+		User user = dao.findByUserId(userid);
+		if(user != null) {
+			List<Ticket> tickets = user.getTickets();
+			if(tickets != null) {
+				
+				u.setTickets(tickets);
+			}
+			return u;
+		}
+		else return null;
+		
+	}
+	
+	//passenger dto conversion
+	
+	public PassengerDto converToPassengerDto(Passenger p) {
+		
+		if(p != null) {
+			
+			pdto.setPname(p.getPname());
+			pdto.setPaddress(p.getPaddress());
+			pdto.setPAge(p.getPAge());
+			pdto.setPAgeCategory(p.getPAgeCategory());
+			pdto.setPemail(p.getPemail());
+			pdto.setPmobileno(p.getPmobileno());
+			return pdto;
+		}
+		else return null;
+		
+	}
+	
+	//payment dto conversion
+	
+	public PaymentDto convertToPaymentDto(Payment py) {
+		
+		if(py != null) {
+			
+			paydto.setPaymentType(py.getPaymentType());
+			paydto.setPaidAmount(py.getPaidAmount());
+			paydto.setPaymentStatus(py.getPaymentStatus());
+			return paydto;
+		}
+		else return null;
+	}
+	
+	//booking history list dto conversion
+	
+	public List<BookingHistoryDto> convertToBookinghistorylist(List<BookingHistory> bhs){
+		
+		if(bhs != null) {
+			
+			List<BookingHistoryDto> bookingHistroyDto = new ArrayList<BookingHistoryDto>(); 
+			
+			for(BookingHistory bh:bhs) {
+				
+				bhdto.setBookedDate(bh.getBookedDate());
+				bhdto.setJourneyDate(bh.getJourneyDate());
+				bhdto.setSeatAvilable(bh.getSeatAvilable());
+				bookingHistroyDto.add(bhdto);
+			}
+			
+			return bookingHistroyDto;
+			
+		}
+		else return null;
 	}
 		
 }
