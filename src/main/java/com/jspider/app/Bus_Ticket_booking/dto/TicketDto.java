@@ -18,6 +18,10 @@ public class TicketDto {
 	private PassengerDto passenger;
 	@OneToOne
 	private PaymentDto payment;
+	@OneToOne
+	private BookingHistoryDto bookingHistory;
+	@ManyToOne
+	private BusDto bus;
 	
 
 }

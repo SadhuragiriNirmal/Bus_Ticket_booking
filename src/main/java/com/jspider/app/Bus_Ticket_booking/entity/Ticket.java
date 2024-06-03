@@ -26,5 +26,8 @@ public class Ticket {
 	private User user;
 	@OneToOne(cascade = CascadeType.REMOVE)
 	private Payment payment;
-	
+	@OneToOne(cascade = CascadeType.REMOVE)
+	private BookingHistory bookingHistory;
+	@ManyToOne
+	private Bus bus;
 }

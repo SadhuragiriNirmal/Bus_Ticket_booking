@@ -29,7 +29,7 @@ public class PaymentService
 	
 	//save payment
 	
-	public ResponseEntity<ResponseStructure<PaymentDto>> savePayment(Payment pay, int userid)
+	public ResponseEntity<ResponseStructure<PaymentDto>> savePayment(Payment pay, int userid, int busid, int seatid)
 	{
 		ResponseStructure<PaymentDto> structure = new ResponseStructure<>();
 		Payment existPayment = dao.savePayment(pay);		
@@ -46,7 +46,7 @@ public class PaymentService
 				
 				Ticket ticket = existPayment.getTicket();
 				ticket.setPayment(existPayment);
-				ticketservice.saveTicket(ticket, userid);
+				ticketservice.saveTicket(ticket, userid, busid, seatid);
 			}
 			
 			return new ResponseEntity<ResponseStructure<PaymentDto>>(structure, HttpStatus.CREATED);

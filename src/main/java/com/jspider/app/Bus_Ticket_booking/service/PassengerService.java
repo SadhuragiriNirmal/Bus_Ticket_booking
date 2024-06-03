@@ -154,7 +154,6 @@ public class PassengerService {
 	
 	public void assignTicketToPassenger(Ticket t) {
 		
-		
 	    Passenger p = t.getPassenger();
 	    if(p != null) {
 	    	

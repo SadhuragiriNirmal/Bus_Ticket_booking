@@ -8,12 +8,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.jspider.app.Bus_Ticket_booking.dao.BookingHistoryDao;
+import com.jspider.app.Bus_Ticket_booking.dao.BusDao;
 import com.jspider.app.Bus_Ticket_booking.dao.TicketDao;
+import com.jspider.app.Bus_Ticket_booking.dto.BookingHistoryDto;
+import com.jspider.app.Bus_Ticket_booking.dto.BusDto;
 import com.jspider.app.Bus_Ticket_booking.dto.PassengerDto;
 import com.jspider.app.Bus_Ticket_booking.dto.PaymentDto;
 import com.jspider.app.Bus_Ticket_booking.dto.TicketDto;
 import com.jspider.app.Bus_Ticket_booking.dto.UserDto;
 import com.jspider.app.Bus_Ticket_booking.entity.BookingHistory;
+import com.jspider.app.Bus_Ticket_booking.entity.Bus;
+import com.jspider.app.Bus_Ticket_booking.entity.Payment;
 import com.jspider.app.Bus_Ticket_booking.entity.Ticket;
 import com.jspider.app.Bus_Ticket_booking.util.ResponseStructure;
 
@@ -31,6 +37,18 @@ public class TicketService {
 	PaymentDto pyDto;
 	
 	@Autowired
+	BookingHistoryDto bhDto;
+	
+	@Autowired
+	BusDto busDto;
+	
+	@Autowired
+	BusDao busDao;
+	
+	@Autowired
+	BookingHistoryDao bhDao;
+	
+	@Autowired
 	PassengerService pservice;
 	
 	@Autowired
@@ -39,42 +57,46 @@ public class TicketService {
 	@Autowired
 	BookingHistoryService bhservice;
 
+	@Autowired
+	BusService busService;
+	
+	@Autowired
+	SeatService seatService;
 	
 	    //save Ticket
 	
-		public ResponseEntity<ResponseStructure<TicketDto>> saveTicket(Ticket ticket, int userid) {
+		public ResponseEntity<ResponseStructure<TicketDto>> saveTicket(Ticket ticket, int userid, int busid, int seatid) {
 			
 		    ResponseStructure<TicketDto> structure = new ResponseStructure<>();
 		    
 		    if(ticket != null) {
 		    	
-		    	ticket.setUser(uservice.dao.findByUserId(userid));//set user to ticket
-		        Ticket existTicket = dao.saveTicket(ticket);
-		        BookingHistory bookingHistory = new BookingHistory();
-		        bookingHistory.setUser(uservice.dao.findByUserId(userid));
-		        bhservice.saveBookingHistory(bookingHistory);;
-		        pservice.assignTicketToPassenger(ticket);//ticket assigning invoke for passenger
-		    		    
+		    	Ticket processedTicket  = ticketBookingProgress(ticket, userid, busid);
+		        Ticket existTicket = dao.saveTicket(processedTicket);
+		        
+		        
 				if(existTicket != null) {
 					
+					pservice.assignTicketToPassenger(existTicket);//ticket assigning invoke for passenger
+			    	busService.assignTicketsToBus(existTicket, busid);//assigne ticket to bus
+			    	seatService.assignPassengerToSeat(existTicket.getPassenger(), seatid);//assigne pasenger to seat
+			    	uservice.assignTicketToUser(existTicket,userid);//ticket assigining invoke for user
 					UserDto udto = uservice.findByUserId(userid).getBody().getData();
 					PassengerDto pdto = pservice.findByPassengerId(existTicket.getPassenger().getPassengerid()).getBody().getData();
 					dto.setTicketNumber(existTicket.getTicketNumber());
 					dto.setTicketCategory(existTicket.getTicketCategory());
 					dto.setPassenger(pdto);
 					dto.setUser(udto);
-					dto.setPayment(pyDto);
-							
-				}
-				else return null;
-		    		
-		    	uservice.assignTicketToUser(ticket,userid);//ticket assigining invoke for user
-		    	structure.setMessage("Tickets saved successfully");
-				structure.setStatus(HttpStatus.CREATED.value());
-				structure.setData(dto);	
-				return new ResponseEntity<ResponseStructure<TicketDto>>(structure,HttpStatus.CREATED);	
-		    	
-		    	
+					dto.setPayment(convertPaymenyToPaymenDto(existTicket.getPayment()));
+					dto.setBookingHistory(convertBookingHistoryDto(existTicket.getBookingHistory()));
+					dto.setBus(convertBusToBusDto(existTicket.getBus()));
+					structure.setMessage("Tickets saved successfully");
+					structure.setStatus(HttpStatus.CREATED.value());
+					structure.setData(dto);	
+					return new ResponseEntity<ResponseStructure<TicketDto>>(structure,HttpStatus.CREATED);
+					
+				}else return null;
+					
 		    }else return null;
 		
 		}
@@ -141,7 +163,6 @@ public class TicketService {
 				if(exTicket != null) {
 					//updated user respected to ticket deletion. return type is void.
 					uservice.updateUserTickets(exTicket);
-					exTicket.setUser(null);
 				}
 				
 				
@@ -201,5 +222,77 @@ public class TicketService {
 			else return null;
 				
 		}
+		
+		//payment to payment Dto conversion
+		public PaymentDto convertPaymenyToPaymenDto(Payment pay) {
+			
+			if(pay != null) {
+				
+				pyDto.setPaidAmount(pay.getPaidAmount());
+				pyDto.setPaymentStatus(pay.getPaymentStatus());
+				pyDto.setPaymentType(pay.getPaymentType());
+	            return pyDto;
+			}
+			else return null;
+		}
+		
+		
+		//bus to bus Dto conversion
+		
+		public BusDto convertBusToBusDto(Bus bus) {
+			
+			if(bus != null) {
+				
+				busDto.setCompany(bus.getCompany());
+				busDto.setBusno(bus.getBusno());
+				busDto.setBusCapacity(bus.getBusCapacity());
+				busDto.setBusType(bus.getBusType());
+				busDto.setDeparturePlace(bus.getDeparturePlace());
+				busDto.setArrivalPlace(bus.getArrivalPlace());
+				busDto.setDepartureDate(bus.getDepartureDate());
+				busDto.setArrivalDate(bus.getArrivalDate());
+				busDto.setDepartureTime(bus.getDepartureTime());
+				busDto.setArrivalTime(bus.getArrivalTime());
+				busDto.setJourneyDuration(bus.getJourneyDuration());
+				return busDto;
+				
+			}
+			else return null;
+
+		}
+		
+		
+		//booking history to booking Histroy dto conversion
+		
+		public BookingHistoryDto convertBookingHistoryDto(BookingHistory bh) {
+			
+			if(bh != null) {
+				
+				bhDto.setBookedDate(bh.getBookedDate());
+				bhDto.setJourneyDate(bh.getJourneyDate());
+				bhDto.setSeatAvilable(bh.getSeatAvilable());
+				return bhDto;
+			}
+			else return null;
+			
+		}
+		
+		//Ticket booking progress 
+
+		public Ticket ticketBookingProgress(Ticket ticket, int userid, int busid) {
+			
+			Bus bus = busDao.findBusByid(busid);
+			ticket.setTicketCategory(ticket.getPassenger().getPAgeCategory());
+	    	ticket.setTicketNumber(bus.getBusno());
+	    	ticket.setBus(busDao.findBusByid(busid));//set bus to ticket
+	    	ticket.setUser(uservice.dao.findByUserId(userid));//set user to ticket
+	        BookingHistory bookingHistory = new BookingHistory();//creating new bh
+	        bookingHistory.setUser(uservice.dao.findByUserId(userid));//set user to bh
+	        bookingHistory.setJourneyDate(bus.getDepartureDate());
+	        BookingHistory existBookingHistory = bhDao.saveBookingHistory(bookingHistory);//save bh
+	        ticket.setBookingHistory(existBookingHistory);//set bh to ticket
+			return ticket;
+		}
+		
 
 }

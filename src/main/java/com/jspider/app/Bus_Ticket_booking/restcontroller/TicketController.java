@@ -29,9 +29,9 @@ public class TicketController {
 	
 	//save Ticket
 		@PostMapping
-		public ResponseEntity<ResponseStructure<TicketDto>> saveTicket(@RequestBody Ticket t, int userid){
+		public ResponseEntity<ResponseStructure<TicketDto>> saveTicket(@RequestBody Ticket t, @RequestParam int userid, @RequestParam int busid, @RequestParam int seatid){
 			
-			return ticketService.saveTicket(t,userid);
+			return ticketService.saveTicket(t, userid, busid, seatid);
 		}
 		
 		//get Ticket
