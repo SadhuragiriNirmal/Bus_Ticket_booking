@@ -2,6 +2,7 @@ package com.jspider.app.Bus_Ticket_booking.entity;
 
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -24,9 +25,9 @@ public class User {
 	private String uemail;
 	private String upassword;
 	private String membership_type;
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
     private List<Ticket> tickets;
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
     private List<BookingHistory> bookingHistories;
     
 }

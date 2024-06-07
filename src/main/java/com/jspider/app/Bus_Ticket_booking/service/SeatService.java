@@ -13,6 +13,7 @@ import com.jspider.app.Bus_Ticket_booking.dto.PassengerDto;
 import com.jspider.app.Bus_Ticket_booking.dto.SeatDto;
 import com.jspider.app.Bus_Ticket_booking.entity.Passenger;
 import com.jspider.app.Bus_Ticket_booking.entity.Seat;
+import com.jspider.app.Bus_Ticket_booking.entity.Ticket;
 import com.jspider.app.Bus_Ticket_booking.util.ResponseStructure;
 
 @Service
@@ -27,15 +28,19 @@ public class SeatService {
 	@Autowired
     PassengerDto pdto;
 	
+	@Autowired
+	BusService busService;
+	
 	//save Seat schedule
 	
-		public ResponseEntity<ResponseStructure<SeatDto>> saveSeat(Seat seat){
+		public ResponseEntity<ResponseStructure<SeatDto>> saveSeat(Seat seat, int busid){
 			
 			ResponseStructure<SeatDto> structure = new ResponseStructure<SeatDto>();
 			
 			Seat existSeat = dao.saveSeat(seat);
 			if(existSeat != null) {
 				
+				busService.assignSeatToBus(existSeat, busid);
 				dto.setSeatno(existSeat.getSeatno());
 				dto.setSeatType(existSeat.getSeatType());
 				dto.setSeatPosition(existSeat.getSeatPosition());
@@ -172,6 +177,29 @@ public class SeatService {
 				  
 			  }
 		  }
+	  }
+	  
+	  //brake the relation between passenger and seat
+	  
+	  public void brakeRelationBtwPassengerAndSeat(Ticket ticket) {
+		  
+		  List<Seat> seats = ticket.getBus().getSeat();
+		  
+		  for(Seat seat:seats) {
+			  
+			if(seat.getPassenger() != null) {
+				
+				if(seat.getPassenger().getPassengerid() == ticket.getPassenger().getPassengerid()) {
+					  
+					  seat.setPassenger(null);
+					  dao.updateSeat(seat, seat.getSeatid());
+					  break;
+				 }
+				
+			 }
+			  
+		  }
+		  
 	  }
 	  
 }

@@ -273,4 +273,41 @@ public class BusService {
 		dao.updatebus(bus, busid);
 	}
 	
+	//assigne seat to bus
+	
+	public void assignSeatToBus(Seat seat, int busid) {
+		
+		Bus bus = dao.findBusByid(busid);
+		List<Seat> existSeats = bus.getSeat();
+		existSeats.add(seat);
+		bus.setSeat(existSeats);
+		dao.updatebus(bus, busid);
+		
+	}
+	
+	
+	//update bus ticket List
+	
+	public void updateBusTickets(Ticket ticket) {
+		
+		List<Ticket> tickets = ticket.getBus().getTicket();
+		if(tickets != null) {
+			
+			List<Ticket> new_tickets = new ArrayList<Ticket>();
+			for(Ticket t:tickets) {
+				
+				if(t.getTicketid() != ticket.getTicketid()) {
+					
+					new_tickets.add(t);
+				}
+			}
+		    Bus bus = ticket.getBus();
+		    bus.setTicket(new_tickets);
+		    dao.updatebus(bus, bus.getBusid());
+			
+		}
+		else return;
+		
+	}
+	
 }

@@ -1,5 +1,6 @@
 package com.jspider.app.Bus_Ticket_booking.service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,8 +10,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.jspider.app.Bus_Ticket_booking.dao.BookingHistoryDao;
+import com.jspider.app.Bus_Ticket_booking.dao.BusDao;
 import com.jspider.app.Bus_Ticket_booking.dto.BookingHistoryDto;
 import com.jspider.app.Bus_Ticket_booking.entity.BookingHistory;
+import com.jspider.app.Bus_Ticket_booking.entity.Bus;
+import com.jspider.app.Bus_Ticket_booking.entity.Ticket;
+import com.jspider.app.Bus_Ticket_booking.entity.User;
 import com.jspider.app.Bus_Ticket_booking.exception.BookingHistoryNotFound;
 import com.jspider.app.Bus_Ticket_booking.util.ResponseStructure;
 
@@ -25,6 +30,9 @@ public class BookingHistoryService
 	
 	@Autowired
 	UserService uservice;
+	
+	@Autowired
+	BusDao busDao;
 	
 	
 	//save booking history
@@ -56,7 +64,6 @@ public class BookingHistoryService
 	public ResponseEntity<ResponseStructure<BookingHistoryDto>> findBookingHistory(int bhid)
 	{
 		ResponseStructure<BookingHistoryDto> structure = new ResponseStructure<>();
-		
 		BookingHistory existHistory = dao.findById(bhid);
 		
 		if(existHistory != null)
@@ -159,6 +166,64 @@ public class BookingHistoryService
 		{
 			return null;
 		}
+		
+	}
+	
+	//ticket booking process
+	
+	public BookingHistory initialzeBookingHistory(Ticket ticket, int userid, int busid) {
+	
+		Bus bus = busDao.findBusByid(busid);
+		BookingHistory bookingHistory = new BookingHistory();//creating new bh
+        bookingHistory.setUser(uservice.dao.findByUserId(userid));//set user to bh
+        bookingHistory.setJourneyDate(bus.getDepartureDate());
+        bookingHistory.setBookedDate(dateToday());
+        BookingHistory existBookingHistory = dao.saveBookingHistory(bookingHistory);//save bh
+        establisheConBtwBookingHistoryAndUser(existBookingHistory, userid);
+		return existBookingHistory;
+	}
+	
+	//date geting method
+	
+	public String dateToday() {
+		
+		LocalDate date = LocalDate.now();
+		return date+"";
+	}
+	
+	//established the relation between booking history and user
+	
+	public void  establisheConBtwBookingHistoryAndUser(BookingHistory bookingHistory, int userid) {
+		
+		User user = uservice.dao.findByUserId(userid);
+		List<BookingHistory> existBookingHistories = user.getBookingHistories();
+		existBookingHistories.add(bookingHistory);
+		user.setBookingHistories(existBookingHistories);
+		uservice.dao.updateUser(user, userid);
+		
+	}
+	
+	//update User booking history List
+	
+	public void updateBooKingHistoryToUser(BookingHistory bookingHistory) {
+		
+		List<BookingHistory> bookingHistories = bookingHistory.getUser().getBookingHistories();
+		if(bookingHistories != null) {
+			
+			List<BookingHistory> new_bookingHistories = new ArrayList<>();
+			for(BookingHistory bh:bookingHistories) {
+				
+				if(bh.getBhid() != bookingHistory.getBhid()) {
+					
+					new_bookingHistories.add(bh);
+				}
+			}
+		    User user = bookingHistory.getUser();
+		    user.setBookingHistories(new_bookingHistories);
+		    uservice.dao.updateUser(user, user.getUserid());
+			
+		}
+		else return;
 		
 	}
 	

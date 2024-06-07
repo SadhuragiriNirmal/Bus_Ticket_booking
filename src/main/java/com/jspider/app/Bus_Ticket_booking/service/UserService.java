@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.jspider.app.Bus_Ticket_booking.dao.BookingHistoryDao;
+import com.jspider.app.Bus_Ticket_booking.dao.BusDao;
+import com.jspider.app.Bus_Ticket_booking.dao.SeatDao;
 import com.jspider.app.Bus_Ticket_booking.dao.TicketDao;
 import com.jspider.app.Bus_Ticket_booking.dao.UserDao;
 import com.jspider.app.Bus_Ticket_booking.dto.BookingHistoryDto;
@@ -18,8 +20,10 @@ import com.jspider.app.Bus_Ticket_booking.dto.PaymentDto;
 import com.jspider.app.Bus_Ticket_booking.dto.TicketDto;
 import com.jspider.app.Bus_Ticket_booking.dto.UserDto;
 import com.jspider.app.Bus_Ticket_booking.entity.BookingHistory;
+import com.jspider.app.Bus_Ticket_booking.entity.Bus;
 import com.jspider.app.Bus_Ticket_booking.entity.Passenger;
 import com.jspider.app.Bus_Ticket_booking.entity.Payment;
+import com.jspider.app.Bus_Ticket_booking.entity.Seat;
 import com.jspider.app.Bus_Ticket_booking.entity.Ticket;
 import com.jspider.app.Bus_Ticket_booking.entity.User;
 import com.jspider.app.Bus_Ticket_booking.util.ResponseStructure;
@@ -52,6 +56,12 @@ public class UserService {
 	
 	@Autowired
 	BookingHistoryDto bhdto;
+	
+	@Autowired
+	SeatDao seatDao;
+	
+	@Autowired
+	BusDao busDao;
 
 	
 	//save user
@@ -139,12 +149,9 @@ public class UserService {
 		User user = dao.findByUserId(userid);
 		if(user != null) {
 			
-			//brake relation between user and Ticket , And DELETE if tickets is presented.
-			if(user.getTickets() != null) brakeRelationTicket(user);
-			
-			//brake relation between user and Booking histroy, And DELETE if booking history is presented.
-			if(user.getBookingHistories() != null) brakeRelationBookingHistory(user);
-			
+			brakeRelationBtwSeatAndPassenger(user);
+			brakeRelationBtwTicketAndBus(user);
+			brakeRelationBtwUserAndBookingHistory(user);
 			User existUser = dao.deleteUser(userid);
 			if(existUser != null) {
 				
@@ -246,55 +253,106 @@ public class UserService {
 		
 	}
 	
-	//brake the relation between user and tickets and delete the ticket
-	
-	public User brakeRelationTicket(User user) {
+	//brake the relation between seat and passenger
+
+	public void brakeRelationBtwSeatAndPassenger(User user) {
 		
-		if(user != null) {
+		List<Ticket> tickets = user.getTickets(); 
+		if(tickets != null) {
 			
-			List<Ticket> tickets = user.getTickets();
-			user.setTickets(null);
-			dao.updateUser(user,user.getUserid());
-			
-			for(Ticket t:tickets) {
+			for(Ticket ticket:tickets) {
 				
-				t.setUser(null);;
-				tdao.updateTicket(t, t.getTicketid());
-				tdao.deleteTicket(t.getTicketid());
+				List<Seat> seats = ticket.getBus().getSeat();
+				for(Seat seat:seats) {
+					
+					if(seat.getPassenger() != null) {
+						
+						if(seat.getPassenger().getPassengerid() == ticket.getPassenger().getPassengerid()) {         
+							
+							seat.setPassenger(null);
+							seatDao.updateSeat(seat, seat.getSeatid());
+							break;
+						}
+						
+					}
+					
+				}
+			}
+		}
+		
+	}
+	
+	//brake the relation between tickets and respective buses
+	
+	public void brakeRelationBtwTicketAndBus(User user) {
+		
+		List<Ticket> tickets = user.getTickets();
+		
+		if(tickets != null) {
+			
+			for(Ticket ticket:tickets) {
+				
+				List<Ticket> newTickets = new ArrayList<Ticket>();
+				
+				if(ticket.getBus() != null) {
+					
+					Bus bus = ticket.getBus();
+					List<Ticket> segTickets = segregateTicketsByBusId(tickets,bus.getBusid());
+					for(Ticket t:segTickets) {
+						
+						if(t.getUser().getUserid() != user.getUserid()) {
+							
+							newTickets.add(t);
+						}
+					}
+					bus.setTicket(newTickets);
+					busDao.updatebus(bus, bus.getBusid());
+				}
 				
 			}
 			
-			return user;
-			
 		}
-		else return null;
-
+		
 	}
 	
-	//brake the relation between user, booking history and delete the booking histroty
+	//brake relation btw user and booking history
 	
-	public User brakeRelationBookingHistory(User user) {
+	public void brakeRelationBtwUserAndBookingHistory(User user) {
 		
 		if(user != null) {
 			
-			List<BookingHistory> bookingHistories = user.getBookingHistories();
-			user.setBookingHistories(null);;
-			dao.updateUser(user,user.getUserid());
-			
-			for(BookingHistory bh: bookingHistories) {
-				
-				bh.setUser(null);;
-				bhdao.updateBookingHistory(bh, bh.getBhid());
-				bhdao.deleteBookingHistory(bh.getBhid());
-				
-			}
-			
-			return user;
+			user.setBookingHistories(null);
+			dao.updateUser(user, user.getUserid());
 			
 		}
-		else return null;
-
+		
 	}
+	
+	//separate tickets by bus id
+	
+	public List<Ticket> segregateTicketsByBusId(List<Ticket> tickets, int busid){
+		
+        if(tickets != null) {
+        	
+        	List<Ticket> newTickets = new ArrayList<Ticket>();
+        	for(Ticket ticket:tickets) {
+        		
+        		if(ticket.getBus() != null) {
+        			
+        			if(ticket.getBus().getBusid() == busid) {
+        				
+        				newTickets.add(ticket);
+        			}
+        			
+        		}
+        		
+        	}
+        	return newTickets;
+        }
+        else return null;
+		
+	}
+
 	
 	//assigne ticket to user if tickes are present
 	

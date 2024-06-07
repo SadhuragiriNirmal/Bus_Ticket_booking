@@ -23,7 +23,6 @@ import com.jspider.app.Bus_Ticket_booking.entity.Payment;
 import com.jspider.app.Bus_Ticket_booking.entity.Ticket;
 import com.jspider.app.Bus_Ticket_booking.util.ResponseStructure;
 
-
 @Service
 public class TicketService {
 	
@@ -161,21 +160,17 @@ public class TicketService {
 				
 				Ticket exTicket = dao.findByTicketId(ticketid);
 				if(exTicket != null) {
-					//updated user respected to ticket deletion. return type is void.
-					uservice.updateUserTickets(exTicket);
+					
+					//ticket cancelling process
+					ticketCancellingProcess(exTicket);
 				}
 				
 				
 				Ticket existTicket = dao.deleteTicket(ticketid);
 				if(existTicket != null) {
 					
-					UserDto udto = uservice.findByUserId(existTicket.getUser().getUserid()).getBody().getData();
-	    		    PassengerDto pdto = pservice.findByPassengerId(existTicket.getPassenger().getPassengerid()).getBody().getData();
 					dto.setTicketNumber(existTicket.getTicketNumber());
 			        dto.setTicketCategory(existTicket.getTicketCategory());
-			        dto.setPassenger(pdto);
-			        dto.setUser(udto);
-			        dto.setPayment(pyDto);
 					structure.setMessage("Ticket deleted successfully");
 					structure.setStatus(HttpStatus.OK.value());
 					structure.setData(dto);
@@ -286,13 +281,25 @@ public class TicketService {
 	    	ticket.setTicketNumber(bus.getBusno());
 	    	ticket.setBus(busDao.findBusByid(busid));//set bus to ticket
 	    	ticket.setUser(uservice.dao.findByUserId(userid));//set user to ticket
-	        BookingHistory bookingHistory = new BookingHistory();//creating new bh
-	        bookingHistory.setUser(uservice.dao.findByUserId(userid));//set user to bh
-	        bookingHistory.setJourneyDate(bus.getDepartureDate());
-	        BookingHistory existBookingHistory = bhDao.saveBookingHistory(bookingHistory);//save bh
+	        BookingHistory existBookingHistory = bhservice.initialzeBookingHistory(ticket, userid, busid);
 	        ticket.setBookingHistory(existBookingHistory);//set bh to ticket
 			return ticket;
 		}
 		
+		
+		//Ticket cancelling process
+		
+		public void ticketCancellingProcess(Ticket ticket) {
+			
+			//updated user respected to ticket deletion. return type is void.
+			uservice.updateUserTickets(ticket);
+			//updated Booking history respected to user . return type is void.
+			bhservice.updateBooKingHistoryToUser(ticket.getBookingHistory());
+			//brake relation between seat and passenger
+			seatService.brakeRelationBtwPassengerAndSeat(ticket);
+			//updated bus respected to ticket deletion. return type is void.
+			busService.updateBusTickets(ticket);
+			
+		}
 
 }

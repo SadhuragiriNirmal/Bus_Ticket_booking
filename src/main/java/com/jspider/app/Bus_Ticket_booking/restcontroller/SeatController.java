@@ -26,9 +26,9 @@ public class SeatController {
 	SeatService service;
 	
 	@PostMapping
-	public ResponseEntity<ResponseStructure<SeatDto>> saveSeat(@RequestBody Seat seat){
+	public ResponseEntity<ResponseStructure<SeatDto>> saveSeat(@RequestBody Seat seat, @RequestParam int busid){
 		
-		return service.saveSeat(seat);
+		return service.saveSeat(seat, busid);
 	}
 	
 	@GetMapping
