@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import com.jspider.app.Bus_Ticket_booking.dao.EmployeeDao;
 import com.jspider.app.Bus_Ticket_booking.dto.EmployeeDto;
 import com.jspider.app.Bus_Ticket_booking.entity.Employee;
-import com.jspider.app.Bus_Ticket_booking.exception.EmployeeNotFound;
 import com.jspider.app.Bus_Ticket_booking.util.ResponseStructure;
 
 @Service
@@ -74,10 +73,7 @@ public class EmployeeService
 			
 			return new ResponseEntity<ResponseStructure<EmployeeDto>>(structure, HttpStatus.FOUND);
 		}
-		else
-		{
-			throw new EmployeeNotFound("Employee ID Not Found in the Database");
-		}
+		else return null;
 	}
 	
 	

@@ -21,6 +21,7 @@ import com.jspider.app.Bus_Ticket_booking.entity.BookingHistory;
 import com.jspider.app.Bus_Ticket_booking.entity.Bus;
 import com.jspider.app.Bus_Ticket_booking.entity.Payment;
 import com.jspider.app.Bus_Ticket_booking.entity.Ticket;
+import com.jspider.app.Bus_Ticket_booking.entity.User;
 import com.jspider.app.Bus_Ticket_booking.util.ResponseStructure;
 
 @Service
@@ -64,23 +65,29 @@ public class TicketService {
 	
 	    //save Ticket
 	
-		public ResponseEntity<ResponseStructure<TicketDto>> saveTicket(Ticket ticket, int userid, int busid, int seatid) {
+		public ResponseEntity<ResponseStructure<TicketDto>> saveTicket(Ticket ticket, String uemail, String busno, String departureDate) {
 			
 		    ResponseStructure<TicketDto> structure = new ResponseStructure<>();
 		    
 		    if(ticket != null) {
 		    	
-		    	Ticket processedTicket  = ticketBookingProgress(ticket, userid, busid);
+		    	User user = uservice.dao.findByuemail(uemail);
+		    	Bus bus = busDao.findBusByBusNumberAndDepatureDate(busno, departureDate);
+		    	Ticket processedTicket  = ticketBookingProgress(ticket, user.getUserid(), bus.getBusid());
 		        Ticket existTicket = dao.saveTicket(processedTicket);
 		        
 		        
 				if(existTicket != null) {
 					
-					pservice.assignTicketToPassenger(existTicket);//ticket assigning invoke for passenger
-			    	busService.assignTicketsToBus(existTicket, busid);//assigne ticket to bus
-			    	seatService.assignPassengerToSeat(existTicket.getPassenger(), seatid);//assigne pasenger to seat
-			    	uservice.assignTicketToUser(existTicket,userid);//ticket assigining invoke for user
-					UserDto udto = uservice.findByUserId(userid).getBody().getData();
+					//ticket assigning invoke for passenger
+					pservice.assignTicketToPassenger(existTicket);
+					//assigne ticket to bus
+			    	busService.assignTicketsToBus(existTicket,bus.getBusid());
+			    	//assigne seats to bus
+			    	seatService.establishRelationBtwSeatsAndBus(existTicket.getPassenger().getSeat(), busDao.findBusByid(bus.getBusid())); 
+			    	//ticket assigining invoke for user
+			    	uservice.assignTicketToUser(existTicket, user.getUserid());
+					UserDto udto = uservice.findByUserId(user.getUserid()).getBody().getData();
 					PassengerDto pdto = pservice.findByPassengerId(existTicket.getPassenger().getPassengerid()).getBody().getData();
 					dto.setTicketNumber(existTicket.getTicketNumber());
 					dto.setTicketCategory(existTicket.getTicketCategory());
@@ -219,6 +226,7 @@ public class TicketService {
 		}
 		
 		//payment to payment Dto conversion
+		
 		public PaymentDto convertPaymenyToPaymenDto(Payment pay) {
 			
 			if(pay != null) {
@@ -283,6 +291,8 @@ public class TicketService {
 	    	ticket.setUser(uservice.dao.findByUserId(userid));//set user to ticket
 	        BookingHistory existBookingHistory = bhservice.initialzeBookingHistory(ticket, userid, busid);
 	        ticket.setBookingHistory(existBookingHistory);//set bh to ticket
+	        ticket.getPassenger().getSeat().setBookedDate(bhservice.dateToday());//set booked date to seats
+	        ticket.getPassenger().getSeat().setPassenger(ticket.getPassenger());//set passenger to seat
 			return ticket;
 		}
 		
@@ -295,8 +305,8 @@ public class TicketService {
 			uservice.updateUserTickets(ticket);
 			//updated Booking history respected to user . return type is void.
 			bhservice.updateBooKingHistoryToUser(ticket.getBookingHistory());
-			//brake relation between seat and passenger
-			seatService.brakeRelationBtwPassengerAndSeat(ticket);
+			//update seats respected to bus
+            seatService.updateSeatsToBus(ticket.getPassenger().getSeat(), ticket.getBus());
 			//updated bus respected to ticket deletion. return type is void.
 			busService.updateBusTickets(ticket);
 			

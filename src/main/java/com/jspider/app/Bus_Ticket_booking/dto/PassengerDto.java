@@ -21,5 +21,7 @@ public class PassengerDto {
 	@JsonIgnore
     @OneToOne
 	private TicketDto ticket;
+	@OneToOne
+	private SeatDto seat;
 	 
 }

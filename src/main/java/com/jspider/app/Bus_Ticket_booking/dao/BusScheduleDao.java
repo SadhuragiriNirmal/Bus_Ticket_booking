@@ -82,5 +82,15 @@ public class BusScheduleDao {
 		else return null;
 	}
 	
+	//get bus schedule by departure place and destination place
 
+	public BusSchedule findBusScheduleByFromAndTo(String startplace, String distination) {
+		
+		BusSchedule busSchedule = busScheduleRepo.findBusScheduleByFromAndTo(startplace, distination);
+        if(busSchedule != null) {
+        	
+        	return busSchedule;
+        }
+        else return null; 
+	}
 }

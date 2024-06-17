@@ -5,8 +5,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.Data;
@@ -29,7 +27,6 @@ public class BusDto {
 	private String journeyDuration;
 	@ManyToOne
 	private BusScheduleDto busSchedules;
-	@JsonIgnore
 	@OneToMany
 	private List<SeatDto> seat;
 

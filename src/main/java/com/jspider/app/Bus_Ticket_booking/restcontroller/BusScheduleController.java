@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,7 +30,6 @@ public class BusScheduleController {
 	public ResponseEntity<ResponseStructure<BusScheduleDto>> saveBusSchedule(@RequestBody BusSchedule schedule){
 		
 		return service.saveBusSchedule(schedule);
-		
 	}
 	
 	@GetMapping
@@ -54,6 +54,18 @@ public class BusScheduleController {
 	public ResponseEntity<ResponseStructure<List<BusScheduleDto>>> getAllBusSchedule(){
 		
 		return service.getAllBusSchedule();
+	}
+	
+	@GetMapping("{startplace}/{destination}")
+	public ResponseEntity<ResponseStructure<BusScheduleDto>> findBusScheduleByFromAndTo(@PathVariable String startplace, @PathVariable String destination){
+		
+		return service.findBusScheduleByFromAndTo(startplace, destination);
+	}
+	
+	@GetMapping("{startplace}/{destination}/{departureDate}")
+	public ResponseEntity<ResponseStructure<BusScheduleDto>> findBusScheduleByFromToAndDate(@PathVariable String startplace, @PathVariable String destination, @PathVariable String departureDate){
+		
+		return service.findBusScheduleByFromToAndDepartureDate(startplace, destination, departureDate);
 	}
 
 }

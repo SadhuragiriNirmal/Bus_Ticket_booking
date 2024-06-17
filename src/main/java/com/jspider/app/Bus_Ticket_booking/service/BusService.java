@@ -1,5 +1,8 @@
 package com.jspider.app.Bus_Ticket_booking.service;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,9 +37,6 @@ public class BusService {
 	BusScheduleDto bsDto;
 	
 	@Autowired
-	SeatDto seatDto;
-	
-	@Autowired
 	BusScheduleDao bsdao;
 	
 	//save bus schedule
@@ -48,6 +48,7 @@ public class BusService {
 		Bus existBus = dao.savebus(bus);
 		if(existBus != null) {
 			
+			insertBusToEveryDate(existBus, scheduleid, true);
 			dto = convertBusToBusDto(existBus);
 			dto.setBusSchedules(convertBusScheduleToBusSchedelDto(bsdao.findBusScheduleByid(scheduleid)));
 			dto.setSeat(convertSeatToSeatDto(existBus.getSeat()));
@@ -151,7 +152,7 @@ public class BusService {
 				newBusDto.add(dto);
 				
 			}
-			structure.setMessage("buses saved successfully");
+			structure.setMessage("buses got successfully");
 			structure.setData(newBusDto);
 			structure.setStatus(HttpStatus.FOUND.value());
 			return new ResponseEntity<ResponseStructure<List<BusDto>>>(structure,HttpStatus.FOUND);
@@ -208,10 +209,12 @@ public class BusService {
 			
 			for(Seat s:seats) {
 				
+				SeatDto seatDto = new SeatDto();
 				seatDto.setSeatno(s.getSeatno());
 				seatDto.setSeatType(s.getSeatType());
 				seatDto.setSeatPosition(s.getSeatPosition());
 				seatDto.setSeatPosition(s.getSeatPosition());
+				seatDto.setBookedDate(s.getBookedDate());
 				listSeats.add(seatDto);
 				
 			}
@@ -272,20 +275,7 @@ public class BusService {
 		bus.setTicket(tickets);
 		dao.updatebus(bus, busid);
 	}
-	
-	//assigne seat to bus
-	
-	public void assignSeatToBus(Seat seat, int busid) {
 		
-		Bus bus = dao.findBusByid(busid);
-		List<Seat> existSeats = bus.getSeat();
-		existSeats.add(seat);
-		bus.setSeat(existSeats);
-		dao.updatebus(bus, busid);
-		
-	}
-	
-	
 	//update bus ticket List
 	
 	public void updateBusTickets(Ticket ticket) {
@@ -310,4 +300,149 @@ public class BusService {
 		
 	}
 	
+	//auto inserter of bus respect to date and each new bus insertion
+	
+	public void insertBusToEveryDate(Bus bus, int scheduleid, boolean newEntery) {
+		
+		LocalDate localDate = LocalDate.now();
+		int year = localDate.getYear();
+		int month = localDate.getMonthValue();
+		int day = localDate.getDayOfMonth();
+		int range = lengthOfTheMonth(year, month) - day;
+		List<String> dates = getAllDatesOfMonth(year, month);
+		if(newEntery) {
+			
+			bus.setDepartureDate(dates.get(day-1));
+			bus.setArrivalDate(dates.get(day));
+			dao.updatebus(bus, bus.getBusid());
+		}
+		else {
+			
+			Bus newBus = getNewBus(bus);
+			newBus.setDepartureDate(dates.get(day-1));
+			newBus.setArrivalDate(dates.get(day));
+			dao.savebus(newBus);
+			establishedReltionBwtBusandBusScheduel(newBus, scheduleid);
+			
+		}
+		autoBusInserter(year, month, range, day, scheduleid, bus, dates);
+		
+	}
+	
+	//bus inserter
+	
+	public void autoBusInserter(int year, int month, int range, int day, int scheduleid, Bus bus, List<String> dates) {
+		
+		for(int i = 0; i < range; i++) {
+			
+			Bus newBus = getNewBus(bus);
+			newBus.setDepartureDate(dates.get(day));
+			if((day+1) < dates.size())newBus.setArrivalDate(dates.get(day+1));
+			else {
+				
+				List<String> nextDates = getAllDatesOfMonth(year, month+1);
+				newBus.setArrivalDate(nextDates.get(0));
+			}
+			dao.savebus(newBus);
+			establishedReltionBwtBusandBusScheduel(newBus, scheduleid);
+			day++;
+		}
+		
+	}
+	
+	
+	//date list provider respect to year and month
+	
+    public static List<String> getAllDatesOfMonth(int year, int month) {
+        
+    	List<String> dates = new ArrayList<>();
+        YearMonth yearMonth = YearMonth.of(year, month);
+        int daysInMonth = yearMonth.lengthOfMonth();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        for (int day = 1; day <= daysInMonth; day++) {
+            LocalDate date = yearMonth.atDay(day);
+            dates.add(date.format(formatter));
+        }
+        return dates;
+    }
+    
+    //provide length(days) of the given month and year
+    
+    public int lengthOfTheMonth(int year, int month) {
+    	
+    	YearMonth yearMonth = YearMonth.of(year, month);
+        int daysInMonth = yearMonth.lengthOfMonth();
+        return daysInMonth;
+    }
+    
+    //getNewBus
+    
+    public Bus getNewBus(Bus bus) {
+    	
+    	Bus b =	new Bus();
+    	b.setCompany(bus.getCompany());
+		b.setBusno(bus.getBusno());
+		b.setBusCapacity(bus.getBusCapacity());
+		b.setSeatsAvailable(bus.getSeatsAvailable());
+		b.setBusType(bus.getBusType());
+		b.setDeparturePlace(bus.getDeparturePlace());
+		b.setArrivalPlace(bus.getArrivalPlace());
+		b.setDepartureDate(bus.getDepartureDate());
+		b.setArrivalDate(bus.getArrivalDate());
+		b.setDepartureTime(bus.getDepartureTime());
+		b.setArrivalTime(bus.getArrivalTime());
+		b.setJourneyDuration(bus.getJourneyDuration());
+    	return b;
+    	
+    }
+    
+    //filter bus by bus number
+    
+    public List<Bus> getDistinctBusByBusNo() {
+    	
+    	List<Bus> buses = dao.getAllbus();
+    	List<Bus> newBuses = new ArrayList<Bus>();
+    	for(Bus bus:buses) {
+    		
+    		if(newBuses.size()==0) {
+    			
+    			newBuses.add(bus);
+    		}
+    		else {
+    			
+    			int count = 0;
+    			for(Bus b:newBuses) {
+    				
+    				if(!b.getBusno().equals(bus.getBusno())) {
+    					count++;
+    				}	
+    			}
+    			
+    			if(newBuses.size()==count)newBuses.add(bus);
+    		}
+    		
+    	}
+    	
+    	return newBuses;
+    }
+    
+	//filter bus by respected given departure date
+	
+	public List<Bus> filterBusByDepartureDate(List<Bus> buses, String departureDate){
+		
+		List<Bus> filteredBusList = new ArrayList<Bus>();
+		
+		for(Bus bus:buses) {
+			
+			if(bus.getDepartureDate().equals(departureDate)) {
+				
+				filteredBusList.add(bus);
+			}
+			
+		}
+		return filteredBusList;
+		
+	}
+    
 }

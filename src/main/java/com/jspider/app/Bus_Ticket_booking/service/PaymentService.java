@@ -12,7 +12,6 @@ import com.jspider.app.Bus_Ticket_booking.dao.PaymentDao;
 import com.jspider.app.Bus_Ticket_booking.dto.PaymentDto;
 import com.jspider.app.Bus_Ticket_booking.entity.Payment;
 import com.jspider.app.Bus_Ticket_booking.entity.Ticket;
-import com.jspider.app.Bus_Ticket_booking.exception.PaymentIdNotFound;
 import com.jspider.app.Bus_Ticket_booking.util.ResponseStructure;
 
 @Service
@@ -29,7 +28,7 @@ public class PaymentService
 	
 	//save payment
 	
-	public ResponseEntity<ResponseStructure<PaymentDto>> savePayment(Payment pay, int userid, int busid, int seatid)
+	public ResponseEntity<ResponseStructure<PaymentDto>> savePayment(Payment pay, String uemail, String busno, String departureDate)
 	{
 		ResponseStructure<PaymentDto> structure = new ResponseStructure<>();
 		Payment existPayment = dao.savePayment(pay);		
@@ -46,7 +45,7 @@ public class PaymentService
 				
 				Ticket ticket = existPayment.getTicket();
 				ticket.setPayment(existPayment);
-				ticketservice.saveTicket(ticket, userid, busid, seatid);
+				ticketservice.saveTicket(ticket, uemail, busno, departureDate);
 			}
 			
 			return new ResponseEntity<ResponseStructure<PaymentDto>>(structure, HttpStatus.CREATED);
@@ -75,10 +74,8 @@ public class PaymentService
 			structure.setStatus(HttpStatus.FOUND.value());
 			return new ResponseEntity<ResponseStructure<PaymentDto>>(structure, HttpStatus.FOUND);
 		}
-		else
-		{
-			throw new PaymentIdNotFound("Payment ID Not Found in the Database");
-		}
+		else return null;
+		
 	}
 	
 	

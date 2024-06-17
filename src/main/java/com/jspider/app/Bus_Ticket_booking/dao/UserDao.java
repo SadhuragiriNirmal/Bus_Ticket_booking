@@ -86,5 +86,16 @@ public class UserDao {
     	else return null;
     	
     }
+    
+    //find by email
+    
+    public User findByuemail(String uemail) {
+    	
+    	if(uemail != null) {
+    		
+    		return repo.findByuemail(uemail);
+    	}
+    	else return null;
+    }
 
 }

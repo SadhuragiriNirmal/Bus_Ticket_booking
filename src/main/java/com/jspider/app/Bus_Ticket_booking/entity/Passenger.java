@@ -29,5 +29,7 @@ public class Passenger {
 	private String paddress;
 	@OneToOne(cascade = CascadeType.ALL)
 	private Ticket ticket;
+	@OneToOne(cascade = CascadeType.ALL)
+	private Seat seat;
 	
 }

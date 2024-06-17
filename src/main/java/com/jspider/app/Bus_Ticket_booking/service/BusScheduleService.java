@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 import com.jspider.app.Bus_Ticket_booking.dao.BusScheduleDao;
 import com.jspider.app.Bus_Ticket_booking.dto.BusDto;
 import com.jspider.app.Bus_Ticket_booking.dto.BusScheduleDto;
+import com.jspider.app.Bus_Ticket_booking.dto.SeatDto;
 import com.jspider.app.Bus_Ticket_booking.entity.Bus;
 import com.jspider.app.Bus_Ticket_booking.entity.BusSchedule;
+import com.jspider.app.Bus_Ticket_booking.entity.Seat;
 import com.jspider.app.Bus_Ticket_booking.util.ResponseStructure;
 
 @Service
@@ -25,7 +27,7 @@ public class BusScheduleService {
 	BusScheduleDto dto;
 	
 	@Autowired
-	BusDto busDto;
+	BusService busService;
 	
 	//save bus schedule
 	
@@ -55,13 +57,52 @@ public class BusScheduleService {
 			
 			dto = convertBusScheduleToBusScheduleDto(existBusSchedule);
 			dto.setBus(convertBusToBusDto(existBusSchedule.getBus()));
-			structure.setMessage("bus scheduel saved successfully");
+			structure.setMessage("bus scheduel found successfully");
 			structure.setData(dto);
 			structure.setStatus(HttpStatus.FOUND.value());
 			return new ResponseEntity<ResponseStructure<BusScheduleDto>>(structure,HttpStatus.FOUND);
 		}
 		else return null;
 	}
+	
+	
+	//get bus schedule by departure and destination 
+	
+	public ResponseEntity<ResponseStructure<BusScheduleDto>> findBusScheduleByFromAndTo(String startplace, String destination){
+		
+		ResponseStructure<BusScheduleDto> structure = new ResponseStructure<BusScheduleDto>();
+		BusSchedule existBusSchedule = dao.findBusScheduleByFromAndTo(startplace, destination);
+		if(existBusSchedule != null) {
+			
+			dto = convertBusScheduleToBusScheduleDto(existBusSchedule);
+			dto.setBus(convertBusToBusDto(existBusSchedule.getBus()));
+			structure.setMessage("bus scheduel found by dep and arr successfully");
+			structure.setData(dto);
+			structure.setStatus(HttpStatus.FOUND.value());
+			return new ResponseEntity<ResponseStructure<BusScheduleDto>>(structure,HttpStatus.FOUND);
+		}
+		else return null;
+	}
+	
+	//find bus with from, to and departure date
+	
+	public ResponseEntity<ResponseStructure<BusScheduleDto>> findBusScheduleByFromToAndDepartureDate(String startplace, String destination, String departureDate){
+		
+		ResponseStructure<BusScheduleDto> structure = new ResponseStructure<BusScheduleDto>();
+		BusSchedule existBusSchedule = dao.findBusScheduleByFromAndTo(startplace, destination);
+		if(existBusSchedule != null) {
+			
+			List<Bus> filteredBus = busService.filterBusByDepartureDate(existBusSchedule.getBus(), departureDate);
+			dto = convertBusScheduleToBusScheduleDto(existBusSchedule);
+			dto.setBus(convertBusToBusDto(filteredBus));
+			structure.setMessage("bus scheduel found by dep and arr successfully");
+			structure.setData(dto);
+			structure.setStatus(HttpStatus.FOUND.value());
+			return new ResponseEntity<ResponseStructure<BusScheduleDto>>(structure,HttpStatus.FOUND);
+		}
+		else return null;
+	}
+
 	
 	//update bus schedule
 	
@@ -73,7 +114,7 @@ public class BusScheduleService {
 			
 			dto = convertBusScheduleToBusScheduleDto(existBusSchedule);
 			dto.setBus(convertBusToBusDto(existBusSchedule.getBus()));
-			structure.setMessage("bus scheduel saved successfully");
+			structure.setMessage("bus scheduel updated successfully");
 			structure.setData(dto);
 			structure.setStatus(HttpStatus.OK.value());
 			return new ResponseEntity<ResponseStructure<BusScheduleDto>>(structure,HttpStatus.OK);
@@ -148,6 +189,7 @@ public class BusScheduleService {
 			
 			for(Bus b: bus) {
 				
+				BusDto busDto = new BusDto();
 				busDto.setCompany(b.getCompany());
 				busDto.setBusno(b.getBusno());
 				busDto.setBusCapacity(b.getBusCapacity());
@@ -159,6 +201,7 @@ public class BusScheduleService {
 				busDto.setDepartureTime(b.getDepartureTime());
 				busDto.setArrivalTime(b.getArrivalTime());
 				busDto.setJourneyDuration(b.getJourneyDuration());
+				busDto.setSeat(convertSeatListToSeatDtoList(b.getSeat()));
 				buses.add(busDto);
 				
 			}return buses;
@@ -168,4 +211,28 @@ public class BusScheduleService {
 
 	}
 	
+	//convert seat to seat dto
+	
+	public List<SeatDto> convertSeatListToSeatDtoList(List<Seat> seats){
+		
+		List<SeatDto> seatDtoList = new ArrayList<SeatDto>();
+		if(seats != null) {
+			
+			for(Seat seat:seats) {
+				
+				SeatDto seatDto = new SeatDto();
+				seatDto.setSeatno(seat.getSeatno());
+				seatDto.setSeatType(seat.getSeatType());
+				seatDto.setSeatPosition(seat.getSeatPosition());
+				seatDto.setSeatPrice(seat.getSeatPrice());
+				seatDto.setBookedDate(seat.getBookedDate());
+				seatDtoList.add(seatDto);
+			}
+			return seatDtoList;
+		}
+		else return null;
+		
+	}	
+	
 }
+

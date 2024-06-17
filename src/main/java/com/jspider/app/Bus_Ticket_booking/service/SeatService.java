@@ -11,9 +11,9 @@ import org.springframework.stereotype.Service;
 import com.jspider.app.Bus_Ticket_booking.dao.SeatDao;
 import com.jspider.app.Bus_Ticket_booking.dto.PassengerDto;
 import com.jspider.app.Bus_Ticket_booking.dto.SeatDto;
+import com.jspider.app.Bus_Ticket_booking.entity.Bus;
 import com.jspider.app.Bus_Ticket_booking.entity.Passenger;
 import com.jspider.app.Bus_Ticket_booking.entity.Seat;
-import com.jspider.app.Bus_Ticket_booking.entity.Ticket;
 import com.jspider.app.Bus_Ticket_booking.util.ResponseStructure;
 
 @Service
@@ -33,18 +33,18 @@ public class SeatService {
 	
 	//save Seat schedule
 	
-		public ResponseEntity<ResponseStructure<SeatDto>> saveSeat(Seat seat, int busid){
+		public ResponseEntity<ResponseStructure<SeatDto>> saveSeat(Seat seat){
 			
 			ResponseStructure<SeatDto> structure = new ResponseStructure<SeatDto>();
 			
 			Seat existSeat = dao.saveSeat(seat);
 			if(existSeat != null) {
 				
-				busService.assignSeatToBus(existSeat, busid);
 				dto.setSeatno(existSeat.getSeatno());
 				dto.setSeatType(existSeat.getSeatType());
 				dto.setSeatPosition(existSeat.getSeatPosition());
 				dto.setSeatPrice(existSeat.getSeatPrice());
+				dto.setBookedDate(existSeat.getBookedDate());
 				structure.setMessage("Seat saved successfully");
 				structure.setData(dto);
 				structure.setStatus(HttpStatus.CREATED.value());
@@ -65,6 +65,7 @@ public class SeatService {
 				dto.setSeatType(existSeat.getSeatType());
 				dto.setSeatPosition(existSeat.getSeatPosition());
 				dto.setSeatPrice(existSeat.getSeatPrice());
+				dto.setBookedDate(existSeat.getBookedDate());
 				dto.setPassenger(convertPassengerDto(existSeat.getPassenger()));
 				structure.setMessage("Seat is found successfully");
 				structure.setData(dto);
@@ -86,6 +87,7 @@ public class SeatService {
 				dto.setSeatType(existSeat.getSeatType());
 				dto.setSeatPosition(existSeat.getSeatPosition());
 				dto.setSeatPrice(existSeat.getSeatPrice());
+				dto.setBookedDate(existSeat.getBookedDate());
 				dto.setPassenger(convertPassengerDto(existSeat.getPassenger()));
 				structure.setMessage("Seat is update successfully");
 				structure.setData(dto);
@@ -107,6 +109,7 @@ public class SeatService {
 				dto.setSeatType(existSeat.getSeatType());
 				dto.setSeatPosition(existSeat.getSeatPosition());
 				dto.setSeatPrice(existSeat.getSeatPrice());
+				dto.setBookedDate(existSeat.getBookedDate());
 				dto.setPassenger(convertPassengerDto(existSeat.getPassenger()));
 				structure.setMessage("Seat is deleted successfully");
 				structure.setData(dto);
@@ -132,6 +135,7 @@ public class SeatService {
 					seatDto.setSeatType(seat.getSeatType());
 					seatDto.setSeatPosition(seat.getSeatPosition());
 					seatDto.setSeatPrice(seat.getSeatPrice());
+					seatDto.setBookedDate(seat.getBookedDate());
 					seatDto.setPassenger(convertPassengerDto(seat.getPassenger()));
 					newSeatDto.add(seatDto);
 					
@@ -163,43 +167,36 @@ public class SeatService {
 		  else return null;
 	  }
 	  
-	  //assigne passenger to seat
+	  //establish relation btw seats and bus
 	  
-	  public void assignPassengerToSeat(Passenger passenger, int seatid) {
+	  public void establishRelationBtwSeatsAndBus(Seat seat, Bus bus) {
 		  
-		  if(passenger != null) {
-			  
-			  Seat seat = dao.findSeatByid(seatid); 
-			  if(seat != null) {
-				  
-				  seat.setPassenger(passenger);
-				  dao.updateSeat(seat, seatid);
-				  
-			  }
-		  }
+		  List<Seat> seats = bus.getSeat();
+		  seats.add(seat);
+		  bus.setSeat(seats);
+		  busService.dao.updatebus(bus, bus.getBusid());
+		  
 	  }
 	  
-	  //brake the relation between passenger and seat
+	  //update seats in buses
 	  
-	  public void brakeRelationBtwPassengerAndSeat(Ticket ticket) {
+	  public void updateSeatsToBus(Seat seat, Bus bus) {
 		  
-		  List<Seat> seats = ticket.getBus().getSeat();
+		  List<Seat> seats = bus.getSeat();
+		  List<Seat> newSeats = new ArrayList<Seat>();
 		  
-		  for(Seat seat:seats) {
+		  if(seats != null) {
 			  
-			if(seat.getPassenger() != null) {
-				
-				if(seat.getPassenger().getPassengerid() == ticket.getPassenger().getPassengerid()) {
+			  for(Seat s:seats) {
+				  
+				  if(s.getSeatid() != seat.getSeatid()) {
 					  
-					  seat.setPassenger(null);
-					  dao.updateSeat(seat, seat.getSeatid());
-					  break;
-				 }
-				
-			 }
-			  
+					  newSeats.add(s);
+				  }
+			  }
+			  bus.setSeat(newSeats);
+			  busService.dao.updatebus(bus, bus.getBusid());
 		  }
-		  
 	  }
 	  
 }

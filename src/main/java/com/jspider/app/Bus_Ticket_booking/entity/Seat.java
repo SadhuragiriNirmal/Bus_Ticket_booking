@@ -5,10 +5,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
-@Data
+@Getter
+@Setter
 public class Seat {
 	
 	@Id
@@ -18,6 +20,7 @@ public class Seat {
 	private String seatType;
 	private String seatPosition;
 	private double seatPrice;
+	private String bookedDate;
 	@OneToOne
 	private Passenger passenger;
 

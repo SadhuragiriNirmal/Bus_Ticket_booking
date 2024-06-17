@@ -15,8 +15,10 @@ import com.jspider.app.Bus_Ticket_booking.dao.SeatDao;
 import com.jspider.app.Bus_Ticket_booking.dao.TicketDao;
 import com.jspider.app.Bus_Ticket_booking.dao.UserDao;
 import com.jspider.app.Bus_Ticket_booking.dto.BookingHistoryDto;
+import com.jspider.app.Bus_Ticket_booking.dto.BusDto;
 import com.jspider.app.Bus_Ticket_booking.dto.PassengerDto;
 import com.jspider.app.Bus_Ticket_booking.dto.PaymentDto;
+import com.jspider.app.Bus_Ticket_booking.dto.SeatDto;
 import com.jspider.app.Bus_Ticket_booking.dto.TicketDto;
 import com.jspider.app.Bus_Ticket_booking.dto.UserDto;
 import com.jspider.app.Bus_Ticket_booking.entity.BookingHistory;
@@ -43,26 +45,14 @@ public class UserService {
 	TicketDao tdao;
 	
 	@Autowired
-	BookingHistoryDao bhdao;
-	
-	@Autowired
-	TicketDto tdto;
-	
-	@Autowired
-	PaymentDto paydto;
-	
-	@Autowired
-	PassengerDto pdto;
-	
-	@Autowired
-	BookingHistoryDto bhdto;
-	
-	@Autowired
 	SeatDao seatDao;
 	
 	@Autowired
 	BusDao busDao;
-
+	
+	@Autowired
+	BookingHistoryDao bhdao;
+	
 	
 	//save user
 	
@@ -100,14 +90,27 @@ public class UserService {
 			dto.setMembership_type(existUser.getMembership_type());
 			for(Ticket t:tickets) {
 				
-				tdto.setTicketNumber(t.getTicketNumber());
-				tdto.setTicketCategory(t.getTicketCategory());
-				tdto.setPassenger(converToPassengerDto(t.getPassenger()));
-				tdto.setPayment(convertToPaymentDto(t.getPayment()));
-				ticketsDto.add(tdto);
+				TicketDto tdto = new TicketDto();
+				if(t != null) {
+					
+					tdto.setTicketNumber(t.getTicketNumber());
+					tdto.setTicketCategory(t.getTicketCategory());
+					
+					if(t.getPassenger() != null && t.getPayment() != null && t.getBus() != null) {
+						
+						tdto.setPassenger(converToPassengerDto(t.getPassenger()));
+						tdto.setPayment(convertToPaymentDto(t.getPayment()));
+						tdto.setBus(convertBusToBusDto(t.getBus(),t));
+					}
+					ticketsDto.add(tdto);
+				}
+				
 			}
 			dto.setTicktes(ticketsDto);
-			dto.setBookingHistories(convertToBookinghistorylist(existUser.getBookingHistories()));	
+			if(existUser.getBookingHistories() != null) {
+				
+				dto.setBookingHistories(convertToBookinghistorylist(existUser.getBookingHistories()));
+			}
 			structure.setMessage("user got successfully");
 			structure.setStatus(HttpStatus.FOUND.value());
 			structure.setData(dto);
@@ -149,7 +152,7 @@ public class UserService {
 		User user = dao.findByUserId(userid);
 		if(user != null) {
 			
-			brakeRelationBtwSeatAndPassenger(user);
+			updateSeatsToBus(user);
 			brakeRelationBtwTicketAndBus(user);
 			brakeRelationBtwUserAndBookingHistory(user);
 			User existUser = dao.deleteUser(userid);
@@ -253,37 +256,35 @@ public class UserService {
 		
 	}
 	
-	//brake the relation between seat and passenger
-
-	public void brakeRelationBtwSeatAndPassenger(User user) {
-		
-		List<Ticket> tickets = user.getTickets(); 
-		if(tickets != null) {
-			
-			for(Ticket ticket:tickets) {
-				
-				List<Seat> seats = ticket.getBus().getSeat();
-				for(Seat seat:seats) {
-					
-					if(seat.getPassenger() != null) {
-						
-						if(seat.getPassenger().getPassengerid() == ticket.getPassenger().getPassengerid()) {         
-							
-							seat.setPassenger(null);
-							seatDao.updateSeat(seat, seat.getSeatid());
-							break;
-						}
-						
-					}
-					
+    //update sests in bus for none impacted account deletion process
+	
+    public void updateSeatsToBus(User user) {
+		  
+    	List<Ticket> tickets = user.getTickets();
+		for(Ticket t:tickets) {
+			  
+			Bus bus = t.getBus();
+			List<Seat> seats = bus.getSeat();
+			List<Seat> newSeats = new ArrayList<Seat>();
+			  
+			if(seats != null) {
+				  
+				for(Seat s:seats) {
+					  
+					if(s.getSeatid() != t.getPassenger().getSeat().getSeatid()) {
+						  
+						newSeats.add(s);
+				    }
 				}
+				bus.setSeat(newSeats);
+				busDao.updatebus(bus, bus.getBusid());
 			}
 		}
-		
-	}
+		  
+    }
 	
 	//brake the relation between tickets and respective buses
-	
+	   
 	public void brakeRelationBtwTicketAndBus(User user) {
 		
 		List<Ticket> tickets = user.getTickets();
@@ -292,13 +293,12 @@ public class UserService {
 			
 			for(Ticket ticket:tickets) {
 				
-				List<Ticket> newTickets = new ArrayList<Ticket>();
-				
 				if(ticket.getBus() != null) {
 					
+					List<Ticket> newTickets = new ArrayList<Ticket>();
 					Bus bus = ticket.getBus();
-					List<Ticket> segTickets = segregateTicketsByBusId(tickets,bus.getBusid());
-					for(Ticket t:segTickets) {
+					List<Ticket> totalBusTickets = bus.getTicket();
+					for(Ticket t:totalBusTickets) {
 						
 						if(t.getUser().getUserid() != user.getUserid()) {
 							
@@ -328,32 +328,6 @@ public class UserService {
 		
 	}
 	
-	//separate tickets by bus id
-	
-	public List<Ticket> segregateTicketsByBusId(List<Ticket> tickets, int busid){
-		
-        if(tickets != null) {
-        	
-        	List<Ticket> newTickets = new ArrayList<Ticket>();
-        	for(Ticket ticket:tickets) {
-        		
-        		if(ticket.getBus() != null) {
-        			
-        			if(ticket.getBus().getBusid() == busid) {
-        				
-        				newTickets.add(ticket);
-        			}
-        			
-        		}
-        		
-        	}
-        	return newTickets;
-        }
-        else return null;
-		
-	}
-
-	
 	//assigne ticket to user if tickes are present
 	
 	public User assignTicketToUserIfPresented(User u,int userid) {
@@ -377,12 +351,14 @@ public class UserService {
 		
 		if(p != null) {
 			
+			PassengerDto pdto = new PassengerDto();
 			pdto.setPname(p.getPname());
 			pdto.setPaddress(p.getPaddress());
 			pdto.setPAge(p.getPAge());
 			pdto.setPAgeCategory(p.getPAgeCategory());
 			pdto.setPemail(p.getPemail());
 			pdto.setPmobileno(p.getPmobileno());
+			pdto.setSeat(convertSeatToSeatDto(p.getSeat()));
 			return pdto;
 		}
 		else return null;
@@ -395,6 +371,7 @@ public class UserService {
 		
 		if(py != null) {
 			
+			PaymentDto paydto = new PaymentDto();
 			paydto.setPaymentType(py.getPaymentType());
 			paydto.setPaidAmount(py.getPaidAmount());
 			paydto.setPaymentStatus(py.getPaymentStatus());
@@ -413,16 +390,77 @@ public class UserService {
 			
 			for(BookingHistory bh:bhs) {
 				
+				BookingHistoryDto bhdto = new BookingHistoryDto();
 				bhdto.setBookedDate(bh.getBookedDate());
 				bhdto.setJourneyDate(bh.getJourneyDate());
 				bhdto.setSeatAvilable(bh.getSeatAvilable());
 				bookingHistroyDto.add(bhdto);
 			}
-			
 			return bookingHistroyDto;
 			
 		}
 		else return null;
 	}
+	
+	
+	
+	//bus to bus Dto conversion
+	
+	public BusDto convertBusToBusDto(Bus bus, Ticket ticket) {
 		
+		if(bus != null) {
+			
+			BusDto busDto = new BusDto();
+			busDto.setCompany(bus.getCompany());
+			busDto.setBusno(bus.getBusno());
+			busDto.setBusCapacity(bus.getBusCapacity());
+			busDto.setBusType(bus.getBusType());
+			busDto.setDeparturePlace(bus.getDeparturePlace());
+			busDto.setArrivalPlace(bus.getArrivalPlace());
+			busDto.setDepartureDate(bus.getDepartureDate());
+			busDto.setArrivalDate(bus.getArrivalDate());
+			busDto.setDepartureTime(bus.getDepartureTime());
+			busDto.setArrivalTime(bus.getArrivalTime());
+			busDto.setJourneyDuration(bus.getJourneyDuration());
+			return busDto;
+			
+		}
+		else return null;
+
+	}
+	
+	//seat to seatDto conversion
+	
+	public SeatDto convertSeatToSeatDto(Seat seat) {
+		
+			if(seat != null) {
+				
+				SeatDto seatDto = new SeatDto();
+				seatDto.setSeatno(seat.getSeatno());
+				seatDto.setSeatType(seat.getSeatType());
+				seatDto.setSeatPosition(seat.getSeatPosition());
+				seatDto.setSeatPosition(seat.getSeatPosition());
+				seatDto.setBookedDate(seat.getBookedDate());
+				return seatDto;
+			}
+			else return null;
+	}
+	
+	//User Login process
+	
+	public ResponseEntity<ResponseStructure<UserDto>> loginVerification(User user){
+		
+		if(user.getUemail() != null) {
+			
+		    User u = dao.findByuemail(user.getUemail());
+		    
+		    if(user.getUpassword().equals(u.getUpassword())) {
+		    	
+		    	return findByUserId(u.getUserid());
+		    }
+		    else return null;				
+		}
+		else return null;
+	}
+	
 }

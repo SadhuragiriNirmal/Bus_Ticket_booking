@@ -29,9 +29,9 @@ public class PaymentController
 	//save payment
 	
 	@PostMapping
-	public ResponseEntity<ResponseStructure<PaymentDto>> savePaymnetDto(@RequestBody Payment pay, @RequestParam int userid, @RequestParam int busid, @RequestParam int seatid)
+	public ResponseEntity<ResponseStructure<PaymentDto>> savePaymnetDto(@RequestBody Payment pay, @RequestParam String uemail, @RequestParam String busno, @RequestParam String departureDate)
 	{
-		return service.savePayment(pay, userid, busid, seatid);
+		return service.savePayment(pay, uemail, busno, departureDate);
 	}
 	
 	//get payment

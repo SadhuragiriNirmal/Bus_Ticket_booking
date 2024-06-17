@@ -16,7 +16,6 @@ import com.jspider.app.Bus_Ticket_booking.entity.BookingHistory;
 import com.jspider.app.Bus_Ticket_booking.entity.Bus;
 import com.jspider.app.Bus_Ticket_booking.entity.Ticket;
 import com.jspider.app.Bus_Ticket_booking.entity.User;
-import com.jspider.app.Bus_Ticket_booking.exception.BookingHistoryNotFound;
 import com.jspider.app.Bus_Ticket_booking.util.ResponseStructure;
 
 @Service
@@ -78,10 +77,8 @@ public class BookingHistoryService
 			
 			return new ResponseEntity<ResponseStructure<BookingHistoryDto>>(structure, HttpStatus.FOUND);
 		}
-		else
-		{
-			throw new BookingHistoryNotFound("Booking ID Not Found in the Database");
-		}
+		else return null;
+	
 	}
 	
 	//update booking history by bhid

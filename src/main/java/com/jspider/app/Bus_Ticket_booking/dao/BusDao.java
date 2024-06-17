@@ -81,5 +81,17 @@ public class BusDao {
 		}
 		else return null;
 	}
+	
+	//get bus by bus number and departure date
+	
+	public Bus findBusByBusNumberAndDepatureDate(String busno, String departureDate) {
+		
+		Bus bus = busRepo.findBusByBusNumberAndDepartureDate(busno, departureDate);
+		if(bus != null) {
+			
+			return bus;
+		}
+		else return null;
+	}
 
 }

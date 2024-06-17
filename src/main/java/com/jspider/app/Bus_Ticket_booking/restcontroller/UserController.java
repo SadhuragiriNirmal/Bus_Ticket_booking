@@ -62,6 +62,13 @@ public class UserController {
 		
 		return userservice.getAllUser();
 	}
+	
+	//login verification
+	@PostMapping("login")
+	public ResponseEntity<ResponseStructure<UserDto>> loginVerification(@RequestBody User user){
+		
+		return userservice.loginVerification(user);
+	}
     	
 
 }
