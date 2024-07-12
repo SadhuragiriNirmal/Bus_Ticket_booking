@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,7 +20,7 @@ import com.jspider.app.Bus_Ticket_booking.service.UserService;
 import com.jspider.app.Bus_Ticket_booking.util.ResponseStructure;
 
 
-
+@CrossOrigin(origins = "http://127.0.0.1:5500")
 @RestController
 @RequestMapping("user")
 public class UserController {
@@ -31,7 +32,8 @@ public class UserController {
 	@PostMapping
 	public ResponseEntity<ResponseStructure<UserDto>> saveUser(@RequestBody User u){
 		
-		return userservice.saveUser(u);
+		ResponseEntity<ResponseStructure<UserDto>> response = userservice.saveUser(u);
+		return ResponseEntity.ok().body(response.getBody());
 	}
 	
 	//get user

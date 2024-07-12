@@ -39,7 +39,7 @@ public class BusService {
 	@Autowired
 	BusScheduleDao bsdao;
 	
-	//save bus schedule
+	//save bus
 	
 	public ResponseEntity<ResponseStructure<BusDto>> saveBus(Bus bus, int scheduleid){
 		
@@ -65,7 +65,7 @@ public class BusService {
 		else return null;
 	}
 	
-	//get bus schedule
+	//get bus
 	
 	public ResponseEntity<ResponseStructure<BusDto>> findByBusId(int busid){
 		
@@ -84,7 +84,7 @@ public class BusService {
 		else return null;
 	}
 	
-	//update bus schedule
+	//update bus
 	
 	public ResponseEntity<ResponseStructure<BusDto>> updateBus(Bus bus, int busid){
 		
@@ -110,7 +110,7 @@ public class BusService {
 		else return null;
 	}
 	
-	//delete bus schedule
+	//delete bus
 	
 	public ResponseEntity<ResponseStructure<BusDto>> deleteBus(int busid){
 		
@@ -135,7 +135,7 @@ public class BusService {
 		else return null;
 	}
 	
-	//get all bus schedule
+	//get all bus 
 	
 	public ResponseEntity<ResponseStructure<List<BusDto>>> getAllBus(){
 		
