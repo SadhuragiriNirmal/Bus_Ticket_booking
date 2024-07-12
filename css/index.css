@@ -1,0 +1,245 @@
+*{
+    padding: 0px;
+    margin: 0px;
+}
+body {
+    font-family: Arial, sans-serif;
+}
+nav{
+
+    width: 100%;
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    background-color:#E35E68;
+}
+
+#navbar{
+
+    
+    width: 90%;
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+
+}
+.navelement{
+
+    border: 1px solid beige;
+    color: white;
+    background: #E35E68;
+    font-weight: bold;
+    font-size: larger;
+    padding: 5px;
+    border-radius: 5px;
+}
+.navelement:hover{
+
+    background: white;
+    color: salmon;
+    cursor: pointer;
+}
+#overlay{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); 
+    display: none; 
+} 
+
+.login-form {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    width: 300px;
+    text-align: center;
+    position: relative;
+}
+
+#log{
+
+    width: 60px;
+    height: 30px;
+    padding: 5px;
+    color: white;
+    background-color: #953A3F;
+    border-radius: 5px;
+    border-style:none;
+    font-weight: bold;
+    text-align: center;
+
+}
+
+#log:hover{
+
+    cursor: pointer;
+    background-color: white;
+    color: #953A3F;
+    border: 1px solid #953A3F;
+}
+
+#closeButton {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 24px;
+    font-weight: bold;
+} 
+#signUpOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Transparent black background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    display: none;
+}
+
+.sign-up-form {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    width: 300px;
+    text-align: center;
+    position: relative;
+}
+
+#sin{
+
+    width: 60px;
+    height: 30px;
+    padding: 5px;
+    color: white;
+    background-color: #953A3F;
+    border-radius: 5px;
+    border-style:none;
+    font-weight: bold;
+    text-align: center;
+
+}
+
+#sin:hover{
+
+    cursor: pointer;
+    background-color: white;
+    color: #953A3F;
+    border: 1px solid #953A3F;
+}
+
+#closeSignUpButton {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+#homeimg{
+
+    width: 100%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 450px;
+}
+
+footer{
+
+    background-color: #953A3F;
+    width:100%;
+    height:100vh;
+}
+
+#messageOverlay {
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    display: none;
+}
+
+.message-card {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    width: 300px;
+    text-align: center;
+    position: relative;
+}
+
+#closeMessageButton {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.message-card h2 {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.message-card p {
+    font-size: 12px;
+    color: #555;
+}
+
+
+/* signup form loder */
+
+.hidden {
+    display: none;
+}
+
+#loadingSpinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #E35E68;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* login-form loder*/
+
+.hid {
+    display: none;
+}
+
+#loadingSpinnerlog {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #E35E68;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: sp 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes sp {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
